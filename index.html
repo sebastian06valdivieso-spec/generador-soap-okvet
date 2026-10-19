@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Generador SOAP · Okvet</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f6f8f8;--card:#fff;--tx:#1b2a2a;--mut:#5d6f6f;--bd:#d5e0df;--ac:#17a9a0;--acx:#fff;--rec:#d93636;--warn:#9a4d00}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a1a;--card:#1b2626;--tx:#e6f0ef;--mut:#92a8a6;--bd:#2f4140;--ac:#2cc4ba;--acx:#08201e;--warn:#f2a65a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121a1a;--card:#1b2626;--tx:#e6f0ef;--mut:#92a8a6;--bd:#2f4140;--ac:#2cc4ba;--acx:#08201e;--warn:#f2a65a;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*:before,*:after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:16px}
+h1{font-size:1.35rem;margin:4px 0}
+.sub{color:var(--mut);font-size:.85rem;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+h2{font-size:1rem;margin:0 0 10px;color:var(--ac)}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+label{display:block;font-size:.78rem;color:var(--mut);margin-bottom:3px}
+input,select,textarea{width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit;font-size:16px;-webkit-appearance:none;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--mut) 50%),linear-gradient(135deg,var(--mut) 50%,transparent 50%);background-position:calc(100% - 15px) 50%,calc(100% - 10px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:26px}
+.chk input{-webkit-appearance:checkbox;appearance:auto;width:20px;height:20px;flex:0 0 auto}
+a.btn{display:inline-block;padding:10px 16px;border-radius:8px;background:var(--ac);color:var(--acx);font-weight:600;text-decoration:none;text-align:center}
+textarea{min-height:64px;resize:vertical}
+.full{grid-column:1/-1}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+button{padding:10px 16px;border:0;border-radius:8px;background:var(--ac);color:var(--acx);font:inherit;font-weight:600;cursor:pointer}
+button.sec{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+.chk{display:flex;gap:8px;align-items:center;font-size:.85rem;margin-top:8px}
+#out{min-height:220px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace}
+@media (max-width:480px){.row>button,.row>a.btn{flex:1 1 100%}}
+.note{font-size:.78rem;color:var(--mut);margin-top:6px}
+/* ---------- Dictado por voz ---------- */
+[hidden]{display:none!important}
+body{padding-bottom:96px}
+.vok{color:var(--ac)}.vw{color:var(--warn)}
+.vbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0 4px}
+.vbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:10px 20px;border-radius:999px}
+.vbtn svg{width:22px;height:22px;fill:currentColor;flex:0 0 auto}
+.vbtn.on{background:var(--rec);color:#fff;animation:vpulse 1.4s ease-out infinite}
+.vbtn.wait{opacity:.7;cursor:progress}
+.vbtn:disabled{opacity:.45;cursor:not-allowed}
+@keyframes vpulse{0%{box-shadow:0 0 0 0 rgba(217,54,54,.55)}70%{box-shadow:0 0 0 14px rgba(217,54,54,0)}100%{box-shadow:0 0 0 0 rgba(217,54,54,0)}}
+@media (prefers-reduced-motion:reduce){.vbtn.on{animation:none}}
+.vstat{flex:1 1 180px;font-size:.85rem;color:var(--mut)}
+.vmeter{height:6px;background:var(--bd);border-radius:3px;overflow:hidden;margin-top:6px}
+.vmeter i{display:block;height:100%;width:0;background:var(--ac);transition:width .08s linear}
+.vint{min-height:1.45em;font-style:italic;color:var(--mut);margin:2px 0 8px;overflow-wrap:anywhere}
+.vmodes{display:flex;gap:6px;flex-wrap:wrap}
+.vmodes label{display:flex;gap:6px;align-items:center;padding:7px 12px;border:1px solid var(--bd);border-radius:999px;color:var(--tx);font-size:.85rem;margin:0;cursor:pointer}
+.vmodes label:has(input:checked){border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac)}
+.vmodes input{-webkit-appearance:radio;appearance:auto;width:16px;height:16px;margin:0;padding:0;flex:0 0 auto}
+.vprop{border:1px dashed var(--ac);border-radius:10px;padding:10px 12px;margin-top:10px}
+.vrow{display:grid;grid-template-columns:auto minmax(130px,210px) 1fr;gap:8px;align-items:start;padding:8px 0;border-bottom:1px solid var(--bd)}
+.vrow:last-child{border-bottom:0}
+.vrow .vck{-webkit-appearance:checkbox;appearance:auto;width:20px;height:20px;margin-top:10px;padding:0}
+.vrow textarea{min-height:42px}
+.vnote{grid-column:2/-1;font-size:.75rem;color:var(--mut);margin-top:-4px}
+.vnote.w{color:var(--warn)}
+@media (max-width:480px){.vrow{grid-template-columns:auto 1fr}.vrow textarea,.vnote{grid-column:1/-1}}
+.vtarget{outline:2px solid var(--rec);outline-offset:1px}
+.vflash{animation:vflash .7s ease-out}
+@keyframes vflash{from{box-shadow:0 0 0 3px var(--ac)}to{box-shadow:0 0 0 0 transparent}}
+.vfab{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:58px;height:58px;min-height:0;padding:0;border-radius:50%;box-shadow:0 4px 14px rgba(0,0,0,.28);z-index:20}
+.vchip{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(84px + env(safe-area-inset-bottom,0px));max-width:min(78vw,360px);background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:6px 10px;font-size:.8rem;box-shadow:0 4px 14px rgba(0,0,0,.18);z-index:20;overflow-wrap:anywhere}
+.vchip div{color:var(--mut);font-style:italic}
+.vhelp summary{cursor:pointer;font-weight:600;color:var(--tx)}
+.vhelp ul{padding-left:18px;margin:6px 0}
+</style>
+</head>
+<body>
+<main>
+<h1>Generador SOAP para Okvet</h1>
+<p class="sub">Llena o dicta lo que tengas, genera el prompt y pégalo en la IA que prefieras (Duck.ai, ChatGPT, Gemini, Claude, DeepSeek). No ingreses datos del propietario.</p>
+
+<!-- ===== Dictado por voz (ver módulo VOZ al final del archivo) ===== -->
+<div class="card" id="vcard"><h2>Dictado por voz</h2>
+<p class="note" id="vPriv" style="margin-top:0">Comprobando el reconocimiento de voz del navegador…</p>
+<div class="row" id="vInstRow" hidden><button type="button" class="sec" id="vInst">Instalar voz local (una sola vez)</button></div>
+<label class="chk" id="vConsentRow" hidden><input type="checkbox" id="vConsent"><span>Acepto que, solo mientras dicto, el audio se procese en el servicio de voz del navegador. Esta app no graba ni guarda audio.</span></label>
+<div class="g" style="margin-top:10px">
+<div><label for="vLang">Idioma del dictado</label><select id="vLang"><option value="es-EC">Español (Ecuador)</option><option value="es-US">Español (Latinoamérica)</option><option value="es-CO">Español (Colombia)</option><option value="es-MX">Español (México)</option><option value="es-ES">Español (España)</option></select></div>
+<div><label>Destino del texto</label><div class="vmodes" role="radiogroup" aria-label="Destino del dictado"><label><input type="radio" name="vmode" value="consulta" checked>Consulta completa</label><label><input type="radio" name="vmode" value="campo">Campo tocado</label></div></div>
+</div>
+<div class="vbar">
+<button type="button" id="vBtn" class="vbtn" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg><span id="vBtnTx">Iniciar dictado</span></button>
+<div class="vstat"><span id="vState" aria-live="polite">Listo para dictar</span> <span id="vTime"></span> <span id="vNoise" class="vw"></span><div class="vmeter" aria-hidden="true"><i id="vLvl"></i></div></div>
+</div>
+<div id="vInterim" class="vint" aria-live="polite"></div>
+<label for="dic">Transcripción de la consulta (editable; cada pausa inicia una línea)</label>
+<textarea id="dic" style="min-height:110px" placeholder="Ej.: Motivo de consulta vómito desde hace 2 días ⏎ Frecuencia cardiaca 120 frecuencia respiratoria 30 temperatura 39 punto 5 ⏎ Abdomen doloroso a la palpación"></textarea>
+<div class="row">
+<button type="button" id="vDist">Distribuir en el formulario</button>
+<button type="button" class="sec" id="vUndo" disabled>Deshacer último cambio</button>
+<button type="button" class="sec" id="vClr">Borrar transcripción</button>
+</div>
+<p class="note" id="vMsg" role="status"></p>
+<div id="vProp" class="vprop" hidden>
+<p class="note" style="margin-top:0"><b>Revisa antes de aplicar.</b> Puedes cambiar el campo destino o corregir el texto. El texto se añade a lo que ya tengas; las filas en naranja no se aplican salvo que las marques.</p>
+<div id="vRows"></div>
+<div class="row"><button type="button" id="vApply">Aplicar seleccionados</button><button type="button" class="sec" id="vCancel">Cancelar</button></div>
+</div>
+<details class="note vhelp"><summary>Cómo dictar (comandos y consejos)</summary>
+<ul>
+<li><b>Di el nombre del campo y luego su contenido</b>, con una breve pausa antes de cada campo: «Motivo de consulta…», «Anamnesis…», «Vacunas…», «Tratamientos previos…».</li>
+<li><b>Constantes seguidas:</b> «Frecuencia cardiaca 120 frecuencia respiratoria 30 temperatura 39 punto 5 mucosas rosadas llenado capilar 2 segundos».</li>
+<li><b>Reseña:</b> «Reseña canino hembra esterilizada raza mestiza 3 años 12 kilos».</li>
+<li><b>Examen físico:</b> «Piel…», «Ojos…», «Ganglios…», «Abdomen…», «Neurológico…». <b>Pruebas:</b> «Ecografía…», «Hemograma…», «Laboratorio…».</li>
+<li><b>Comandos:</b> «punto y seguido», «nueva línea», «detener dictado». Atajo en PC: Alt+M.</li>
+<li><b>Modo «Campo tocado»:</b> toca un campo y dicta; toca otro campo para cambiar de destino sin detener la grabación.</li>
+<li>Lo que termina en <b>(?)</b> se reconoció con baja confianza: revísalo. Teléfonos, cédulas y correos se ocultan automáticamente; aun así, no dictes datos del propietario.</li>
+<li>Con ruido (ladridos, ventiladores, secadoras) habla a 20-30 cm del micrófono o usa auriculares con micrófono.</li>
+<li>Alternativa 100% local en Android: el micrófono del teclado Gboard con reconocimiento de voz sin conexión funciona en cualquier campo.</li>
+</ul></details>
+</div>
+
+<div class="card"><h2>1. Reseña del paciente</h2>
+<div class="g">
+<div><label>Especie</label><select id="esp"><option>Canino</option><option>Felino</option><option>Otra</option></select></div>
+<div><label>Raza</label><input id="raza"></div>
+<div><label>Edad</label><input id="edad" placeholder="ej. 3 años"></div>
+<div><label>Sexo</label><select id="sexo"><option>Macho</option><option>Hembra</option></select></div>
+<div><label>Estado reproductivo</label><select id="rep"><option>Entero</option><option>Esterilizado</option></select></div>
+<div><label>Peso (kg)</label><input id="peso" inputmode="decimal"></div>
+<div><label>Región de Ecuador</label><select id="reg"><option>Sierra</option><option>Costa</option><option>Amazonía / Oriente</option><option>Galápagos</option></select></div>
+<div class="full"><label>Exposición a garrapatas / vectores / estado sanitario local</label><input id="vect" placeholder="ej. vive en finca, garrapatas visibles, sin collar antiparasitario"></div>
+</div></div>
+
+<div class="card"><h2>2. Motivo de consulta y anamnesis</h2>
+<div class="g">
+<div class="full"><label>Motivo de consulta</label><textarea id="motivo"></textarea></div>
+<div class="full"><label>Anamnesis (inicio, evolución, apetito, agua, vómito/diarrea, micción, tos, dieta, exposición a tóxicos o exterior)</label><textarea id="anam"></textarea></div>
+<div><label>Vacunación / desparasitación</label><input id="vac"></div>
+<div><label>Tratamientos previos / medicación actual</label><input id="trat"></div>
+<div class="full"><label>Listado de problemas (opcional, los que ya identificaste)</label><textarea id="probl"></textarea></div>
+</div></div>
+
+<div class="card"><h2>3. Constantes fisiológicas</h2>
+<div class="g">
+<div><label>FC (lpm)</label><input id="fc" inputmode="numeric"></div>
+<div><label>FR (rpm)</label><input id="fr" inputmode="numeric"></div>
+<div><label>Temperatura (°C)</label><input id="temp" inputmode="decimal"></div>
+<div><label>TLLC (seg)</label><input id="tllc"></div>
+<div><label>Mucosas</label><input id="muc" placeholder="color, humedad"></div>
+<div><label>Pulso</label><input id="pulso" placeholder="calidad, sincronía"></div>
+<div><label>Hidratación</label><input id="hid" placeholder="% o pliegue"></div>
+<div><label>Condición corporal (1-9)</label><input id="cc" inputmode="numeric"></div>
+<div><label>Dolor (escala/valor)</label><input id="dolor"></div>
+</div>
+<p class="note" id="ref"></p></div>
+
+<div class="card"><h2>4. Examen físico por sistemas (solo hallazgos)</h2>
+<div class="g" id="sis"></div>
+<p class="note">Lo que dejes vacío se enviará como "no evaluado", no como normal.</p></div>
+
+<div class="card"><h2>5. Pruebas complementarias (solo si ya las tienes)</h2>
+<div class="g"><div class="full"><label>Hallazgos ecográficos (narración breve)</label><textarea id="eco"></textarea></div>
+<div class="full"><label>Laboratorio y otras pruebas: solo valores alterados con interés clínico</label><textarea id="lab" placeholder="ej. HCT 22%, plaquetas 60.000, ALT 210, snap test Ehrlichia +"></textarea></div></div></div>
+
+<div class="card"><h2>Generar</h2>
+<div class="chk"><input type="checkbox" id="full" checked><span><b>Informe completo para Okvet</b> (S, O, I, plan diagnóstico, próximo control). Desmarcado = salida rápida: solo presuntivos y diferenciales</span></div>
+<div class="chk"><input type="checkbox" id="strict"><span><b>Modo estricto</b>: mismo orden y criterio de priorización en cualquier IA (Gemini, etc.)</span></div>
+<div class="chk"><input type="checkbox" id="dicp" checked><span><b>Incluir el dictado</b> como notas de respaldo en el prompt (solo si hay transcripción)</span></div>
+<div class="row">
+<button type="button" id="cp">Generar y copiar prompt</button>
+<button type="button" class="sec" id="share" style="display:none">Compartir a una app de IA</button>
+<a class="btn sec" id="duck" href="https://duck.ai/" target="_blank" rel="noopener" style="background:transparent;color:var(--tx);border:1px solid var(--bd)">Copiar y abrir Duck.ai</a>
+<button type="button" class="sec" id="clr">Limpiar todo</button>
+</div>
+<p class="note" id="msg" style="font-weight:600"></p>
+<p class="note" id="warn"></p></div>
+
+<div class="card"><h2>Prompt listo para la IA</h2>
+<textarea id="out" readonly placeholder="Aquí aparecerá el prompt..."></textarea>
+<p class="note">Si el botón de copiar no funciona en tu dispositivo: mantén presionado el texto de arriba → Seleccionar todo → Copiar. Duck.ai es gratis y no pide cuenta. Si usas Gemini en AI Studio, baja la temperatura a 0-0.3. Apoyo clínico: el análisis no sustituye el criterio del médico tratante.</p></div>
+</main>
+<script>
+var SIS=["Estado general / actitud","Piel y anexos","Ojos y oídos","Ganglios linfáticos","Cardiovascular","Respiratorio","Digestivo / abdomen","Urogenital","Musculoesquelético","Neurológico"];
+var REF={Canino:"Referencia canino: FC 60-140 (hasta 160 en razas pequeñas) · FR 10-30 · T 38.0-39.2 °C · TLLC <2 s",Felino:"Referencia felino: FC 140-220 · FR 20-40 · T 38.0-39.2 °C · TLLC <2 s",Otra:""};
+var $=function(i){return document.getElementById(i)};
+var ids=["esp","raza","edad","sexo","rep","peso","motivo","anam","vac","trat","fc","fr","temp","tllc","muc","pulso","hid","cc","dolor","lab","eco","reg","vect","probl","dic"];
+var sg=$("sis");
+SIS.forEach(function(s,i){var d=document.createElement("div");d.className="full";d.innerHTML='<label>'+s+'</label><input id="s'+i+'">';sg.appendChild(d)});
+SIS.forEach(function(s,i){ids.push("s"+i)});
+function refresh(){$("ref").textContent=REF[$("esp").value]||""}
+$("esp").addEventListener("change",refresh);refresh();
+function save(){try{var o={};ids.forEach(function(i){o[i]=$(i).value});o._cb=[$("full").checked,$("strict").checked,$("dicp").checked];localStorage.setItem("soap_draft",JSON.stringify(o))}catch(e){}}
+function load(){try{var o=JSON.parse(localStorage.getItem("soap_draft")||"null");if(o){ids.forEach(function(i){if(o[i]!==undefined)$(i).value=o[i]});if(o._cb){$("full").checked=o._cb[0];$("strict").checked=o._cb[1];if(o._cb[2]!==undefined)$("dicp").checked=o._cb[2]}}}catch(e){}refresh()}
+document.addEventListener("input",save);document.addEventListener("change",save);load();
+function v(i){return $(i).value.trim()||"no informado"}
+function num(i){var x=parseFloat(String($(i).value).replace(",","."));return isNaN(x)?null:x}
+var RG={Canino:{fc:[60,160],fr:[10,30],temp:[38,39.2]},Felino:{fc:[140,220],fr:[20,40],temp:[38,39.2]}};
+var NM={fc:"FC",fr:"FR",temp:"Temperatura"};
+function alerts(){var r=RG[$("esp").value],out=[];if(!r)return out;Object.keys(r).forEach(function(k){var x=num(k);if(x===null)return;if(x<r[k][0])out.push(NM[k]+" "+x+" por debajo de "+r[k][0]);else if(x>r[k][1])out.push(NM[k]+" "+x+" por encima de "+r[k][1])});return out}
+function missing(){var m=[];[["peso","peso"],["fc","FC"],["fr","FR"],["temp","temperatura"],["motivo","motivo de consulta"],["anam","anamnesis"]].forEach(function(p){if(!$(p[0]).value.trim())m.push(p[1])});return m}
+function showWarn(){var mi=missing(),al=alerts(),t=[];if(mi.length)t.push("Faltan datos clave: "+mi.join(", ")+" (la IA los tratará como no informados).");if(al.length)t.push("Fuera de rango de referencia: "+al.join("; ")+".");$("warn").textContent=t.join(" ")}
+function build(){
+var L=[],full=$("full").checked,st=$("strict").checked;
+L.push("### CONTEXTO (ROL EXPERTO)\nActúa como un Médico Veterinario Zootecnista especialista en Medicina Interna y Urgencias de Pequeños Animales, con amplia experiencia en registros médicos SOAP y en la plataforma Okvet.\n");
+L.push("### TAREA\n"+(full?"Transforma de forma autónoma los datos clínicos de este paciente en un registro médico estructurado bajo el sistema SOAP, optimizado para la plataforma Okvet, y genera además un análisis diferencial avanzado adaptado estrictamente a la casuística epidemiológica de Ecuador.":"Genera de forma autónoma un análisis RÁPIDO: solo diagnósticos presuntivos y diferenciales avanzados, adaptados estrictamente a la casuística epidemiológica de Ecuador.")+" Omite taxativamente cualquier recomendación de fármacos, tratamientos, dosis o posologías.\n");
+L.push("### MÉTODO\nOpera internamente bajo un ciclo iterativo de auditoría clínica: 1) planificar; 2) validar la veracidad de cada dato contra lo suministrado; 3) correlacionar la fisiopatología; 4) evaluar la epidemiología regional de Ecuador; 5) filtrar sesgos; 6) estructurar. Antes de entregar, un árbitro adversarial interno audita el borrador e identifica agresivamente cualquier alucinación, dato inventado, inferencia sin sustento o violación de la prohibición de fármacos y tratamientos; corrige y repite la auditoría hasta garantizar cero margen de error. No muestres este proceso: entrega solo el resultado final ya auditado.\n");
+L.push("### EL LISTÓN\nEl resultado final debe superar el estándar de rigor de una interconsulta de especialidad en medicina interna: precisión sintáctica clínica absoluta, separación tajante entre HECHO (dato suministrado) e INFERENCIA, uso exclusivo de los datos suministrados (marcando explícitamente DATOS INSUFICIENTES cuando corresponda) y una estructuración impecable"+(full?", lista para integración inmediata en Okvet sin requerir edición previa":"")+".\n");
+L.push("### DATOS DE LA CONSULTA");
+L.push("RESEÑA: "+v("esp")+", raza "+v("raza")+", edad "+v("edad")+", sexo "+$("sexo").value+", "+$("rep").value+", peso "+v("peso")+" kg.");
+L.push("MOTIVO DE CONSULTA: "+v("motivo"));
+L.push("ANAMNESIS: "+v("anam"));
+L.push("VACUNACIÓN/DESPARASITACIÓN: "+v("vac"));
+L.push("TRATAMIENTOS PREVIOS/MEDICACIÓN: "+v("trat"));
+L.push("REGIÓN DE ECUADOR: "+$("reg").value+". EXPOSICIÓN A GARRAPATAS/VECTORES/ESTADO SANITARIO LOCAL: "+v("vect"));
+L.push("LISTADO DE PROBLEMAS (médico): "+v("probl"));
+L.push("CONSTANTES: FC "+v("fc")+" lpm; FR "+v("fr")+" rpm; T "+v("temp")+" °C; TLLC "+v("tllc")+"; mucosas "+v("muc")+"; pulso "+v("pulso")+"; hidratación "+v("hid")+"; CC "+v("cc")+"; dolor "+v("dolor")+".");
+L.push("EXAMEN FÍSICO POR SISTEMAS:");
+SIS.forEach(function(s,i){var x=$("s"+i).value.trim();L.push("- "+s+": "+(x||"no evaluado"))});
+L.push("HALLAZGOS ECOGRÁFICOS (narración del médico): "+v("eco"));
+L.push("PRUEBAS COMPLEMENTARIAS (solo valores alterados de interés clínico; lo no informado no se asume normal): "+v("lab"));
+/* Dictado por voz: se adjunta como respaldo; los campos estructurados prevalecen */
+var dc=$("dic").value.trim();if($("dicp").checked&&dc)L.push("NOTAS DICTADAS POR VOZ (transcripción automática del médico durante la consulta; puede contener errores de reconocimiento; '(?)' al final de un fragmento indica baja confianza; si contradicen los campos estructurados, prevalecen los campos y debes señalar la contradicción): "+dc.replace(/\s*\n+\s*/g," / "));
+var al=alerts();L.push("ALERTAS CALCULADAS POR LA APP (constantes fuera del rango de referencia; interpretar según contexto, el estrés o el jadeo pueden alterarlas): "+(al.length?al.join("; "):"ninguna detectada con los datos ingresados")+"\n");
+var RES="### FORMATO Y RESTRICCIONES\n- PROHIBICIÓN ABSOLUTA de incluir tratamientos, fármacos, dosis o posologías.\n- PROHIBIDO inventar, asumir o reinterpretar datos de laboratorio o ecografía no declarados.\n";
+var FULLFMT=RES+"Entrega la respuesta en DOS partes.\n\nPARTE 1 — CAMPOS OKVET. Presenta cada sección (S, O, I, P, Próximo control) en su propio bloque de código independiente, con el título de la sección fuera del bloque. Dentro de cada bloque: TEXTO PLANO PURO, sin sintaxis Markdown interna, sin negritas, solo guiones simples para listar; breve y con abreviaturas clínicas estándar. Secciones, en este orden:\n1. S: Subjetivo (Anamnesis)\n2. O: Objetivo (Detalles del examen y listado de problemas)\n3. I: Interpretación (diagnóstico presuntivo y diferenciales ordenados del más al menos probable; diagnóstico final solo si los datos lo sustentan; si no hay datos suficientes, indícalo)\n4. P: Plan diagnóstico (pruebas prioritarias y su motivo)\n5. Próximo control (intervalo sugerido y motivo)\n\nPARTE 2 — PANEL CLÍNICO (solo para el médico, no se pega en Okvet):\n- Matriz diferencial jerarquizada con justificación por signo, LIMITADA A LA CASUÍSTICA DE ECUADOR y ponderada según la región indicada: priorizar hemoparásitos transmitidos por garrapatas (Ehrlichia, Babesia, Anaplasma), parvovirus, moquillo, leptospirosis, dirofilariasis según zona, ectoparasitosis, intoxicaciones frecuentes (organofosforados, raticidas) y, en felinos, panleucopenia, complejo respiratorio, FeLV y FIV. No incluyas enfermedades no presentes en Ecuador salvo que los hallazgos lo justifiquen, indicándolas como poco probables.\n- Alertas de riesgo: signos de alarma a monitorear.\n- Datos faltantes decisivos: qué dato o prueba cambiaría el ranking.\nNo propongas tratamientos, fármacos ni dosis.";
+var QUICK=RES+"SALIDA RÁPIDA. Entrega SOLO lo siguiente, en texto conciso:\n1. Diagnóstico(s) presuntivo(s) principal(es).\n2. Matriz de diferenciales con justificación por signo, LIMITADA A LA CASUÍSTICA DE ECUADOR y ponderada según la región indicada (hemoparásitos por garrapatas, parvovirus, moquillo, leptospirosis, dirofilariasis según zona, ectoparasitosis, intoxicaciones frecuentes y, en felinos, panleucopenia, complejo respiratorio, FeLV y FIV; no incluyas enfermedades no presentes en Ecuador salvo que los hallazgos lo justifiquen).\n3. Alertas de riesgo: signos de alarma, una línea cada una.\n4. Pruebas diagnósticas prioritarias, una línea con su motivo.\n5. Datos faltantes decisivos: qué dato cambiaría el ranking.\nNO incluyas tratamientos, fármacos, dosis, historia clínica SOAP ni informe final.";
+var VER="### REGLAS DE VERACIDAD (OBLIGATORIAS)\n- Usa SOLO los datos proporcionados. No inventes hallazgos, valores, antecedentes ni resultados. Lo no informado o no evaluado no se asume normal ni alterado.\n- En cada diferencial separa los DATOS DEL CASO que lo apoyan de tu INFERENCIA.\n- Si los datos no alcanzan para sostener un presuntivo, escribe DATOS INSUFICIENTES e indica qué dato faltante lo definiría. No fuerces un diagnóstico: es preferible un resultado no concluyente a una suposición.\n- Indica la certeza de cada diferencial (ALTA, MEDIA o BAJA) con una justificación breve.\n- No cites estudios, guías, autores ni cifras de prevalencia salvo que estés seguro de que existen; ante la duda, omítelos.\n- Si hay datos contradictorios entre sí, señálalo en lugar de resolverlo en silencio.\n- No reinterpretes laboratorio o ecografía más allá de lo que el médico informó.\n- No propongas tratamientos, fármacos ni dosis.";
+var STR="### REGLAS DE PRIORIZACIÓN (OBLIGATORIAS)\n- Ordena los diferenciales aplicando en este orden: (1) ajuste con los signos y hallazgos de ESTE caso; (2) prevalencia en la región de Ecuador indicada; (3) gravedad.\n- Marca con [NO PASAR POR ALTO] todo diferencial grave aunque sea menos probable, sin cambiar su posición por probabilidad.\n- Procedimiento interno (no lo muestres): a) lista de problemas; b) candidatos; c) asigna probabilidad (ALTA/MEDIA/BAJA) y urgencia (ALTA/MEDIA/BAJA) a cada uno; d) ordena por probabilidad y, en empate, por urgencia; e) redacta.\n- La matriz tiene EXACTAMENTE 5 diferenciales con columnas fijas: N° | Diagnóstico | Probabilidad | Urgencia | Signos a favor | Signos en contra o faltantes | Prueba que lo confirma.\n- Ejemplo solo de FORMA (caso ficticio, no copies su contenido): 1 | Diagnóstico X | ALTA | MEDIA | signo A, signo B | falta signo C | Prueba Y\n- No agregues introducción, cierre ni secciones extra, salvo la sección de iteración final.";
+var HF="- Antes de cada bloque de código de la Parte 1 escribe su encabezado exacto, en este orden: === S: SUBJETIVO ===, === O: OBJETIVO ===, === I: INTERPRETACIÓN ===, === P: PLAN DIAGNÓSTICO ===, === PRÓXIMO CONTROL ===. La Parte 2 va bajo === PANEL CLÍNICO (solo médico) ===. Cierra con === ITERACIÓN ===.";
+var HQ="- Usa exactamente estos encabezados, en este orden: === PRESUNTIVOS ===, === MATRIZ DE DIFERENCIALES ===, === ALERTAS ===, === PRUEBAS PRIORITARIAS ===, === DATOS FALTANTES ===, === ITERACIÓN ===.";
+L.push(VER+"\n");L.push(full?FULLFMT:QUICK);
+if(st)L.push("\n"+STR+"\n"+(full?HF:HQ));
+L.push("\n### ITERACIÓN (OBLIGATORIA)\nEntrega el resultado completo con los datos disponibles, sin esperar confirmación. Finaliza obligatoriamente, bajo === ITERACIÓN ===, con la pregunta de iteración al médico sobre los datos pendientes (anamnesis, constantes faltantes, laboratorio o ecografía previos) que precisarían los diferenciales"+(full?" o completarían la historia clínica":"")+".");
+return L.join("\n");}
+/* Copiado compatible con escritorio, Android e iPhone (también en archivos locales sin HTTPS) */
+function copySync(t){var x=document.createElement("textarea"),ok=false;x.value=t;x.setAttribute("aria-hidden","true");
+x.style.cssText="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;border:0;padding:0";
+document.body.appendChild(x);x.focus();x.select();try{x.setSelectionRange(0,t.length)}catch(e){}
+try{ok=document.execCommand("copy")}catch(e){ok=false}document.body.removeChild(x);return ok}
+function copyText(t,done){var ok=copySync(t);
+if(ok){done(true);try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t)["catch"](function(){})}catch(e){}return}
+try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){done(true)},function(){done(false)});return}}catch(e){}
+done(false)}
+function selectOut(){var o=$("out");try{o.focus();o.select();o.setSelectionRange(0,o.value.length)}catch(e){}}
+function prep(){var t=build();$("out").value=t;showWarn();return t}
+function tag(){return ($("full").checked?"informe completo":"salida rápida")+($("strict").checked?", modo estricto":"")}
+$("cp").onclick=function(){var t=prep();copyText(t,function(ok){
+if(ok)$("msg").textContent="Prompt copiado ("+tag()+"). Pégalo en tu IA.";
+else{selectOut();$("msg").textContent="Tu navegador no permitió copiar automáticamente: el texto quedó seleccionado abajo, cópialo manualmente."}})};
+$("duck").onclick=function(){var t=prep();copyText(t,function(ok){
+$("msg").textContent=ok?"Prompt copiado. En Duck.ai mantén presionado (o Ctrl+V) el cuadro de texto, pega y envía.":"No se pudo copiar automáticamente: vuelve aquí, mantén presionado el texto de abajo y cópialo."})};
+if(navigator.share){$("share").style.display="";$("share").onclick=function(){var t=prep();
+navigator.share({text:t}).then(function(){$("msg").textContent="Prompt compartido."},function(e){if(!e||e.name!=="AbortError")$("msg").textContent="No se pudo compartir; usa 'Generar y copiar prompt'."})}}
+var clrT=0;
+$("clr").onclick=function(){var b=$("clr");
+if(!clrT){b.textContent="Toca otra vez para borrar";clrT=setTimeout(function(){clrT=0;b.textContent="Limpiar todo"},3000);return}
+clearTimeout(clrT);clrT=0;b.textContent="Limpiar todo";
+ids.forEach(function(i){var e=$(i);if(e.tagName!=="SELECT")e.value=""});$("out").value="";save();if(window.VOZ)VOZ.reset();$("msg").textContent="Campos borrados.";$("warn").textContent=""};
+</script>
+
+<!-- Botón flotante de dictado (visible al hacer scroll) y burbuja de estado -->
+<button type="button" id="vFab" class="vbtn vfab" aria-label="Iniciar dictado" aria-pressed="false" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg></button>
+<div id="vChip" class="vchip" aria-live="polite" hidden></div>
+
+<script>
+/* =====================================================================
+   MÓDULO DE DICTADO POR VOZ (VOZ) · Generador SOAP Okvet
+   ---------------------------------------------------------------------
+   Motor ....... Web Speech API del navegador (SpeechRecognition). Sin
+                 servidores propios ni librerías externas.
+   Privacidad .. 1) Si el navegador ofrece reconocimiento EN EL DISPOSITIVO
+                    (processLocally), se usa siempre: el audio no sale del
+                    equipo y funciona sin internet.
+                 2) Si solo hay reconocimiento en línea (Google en Chrome,
+                    Microsoft en Edge, Apple en Safari), se exige
+                    consentimiento explícito antes de grabar.
+                 3) Esta app nunca graba, guarda ni envía audio. El medidor
+                    de nivel analiza volumen en memoria y lo descarta.
+                 4) Teléfonos, cédulas y correos dictados se ocultan.
+   Modos ....... "consulta": transcribe todo en #dic y luego DISTRIBUYE por
+                 encabezados hablados, con revisión previa obligatoria.
+                 "campo": escribe directo en el último campo tocado.
+   Estabilidad . En móvil (Android/iOS) el modo continuo es inestable: se
+                 usa una frase por sesión con reinicio automático, filtro
+                 de duplicados y corte de seguridad ante bucles.
+   Integración . Usa globals del script principal: $, ids, save, refresh,
+                 num. Expone window.VOZ (reset, clean, propose) para pruebas.
+   ===================================================================== */
+(function(){
+"use strict";
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+var UA=navigator.userAgent||"";
+var MOBILE=/Android|iPhone|iPad|iPod/i.test(UA)||(/Macintosh/.test(UA)&&navigator.maxTouchPoints>1);
+var LS={consent:"soap_voice_cloud",lang:"soap_voice_lang",mode:"soap_voice_mode"};
+/* Campos numéricos y su rango plausible (fuera de rango => revisión manual) */
+var NUMF={peso:[0.05,150],fc:[20,400],fr:[4,150],temp:[30,45],cc:[1,9]};
+var MAX_MS=30*60*1000;   // corte de seguridad de una sesión de dictado
+var S={local:"no",want:false,rec:null,fatal:"",t0:0,tick:0,ends:[],lastRes:0,
+  lastFinal:"",lastFinalTs:0,wake:null,meter:null,field:null,undo:[],rows:[],stopT:0};
+
+/* ---------------- utilidades ---------------- */
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+/* Minúsculas y sin tildes, conservando la LONGITUD (índices alineados con el original) */
+function fold(s){var o="";for(var i=0;i<s.length;i++){var c=s.charAt(i).toLowerCase().charAt(0);if(c.normalize)c=c.normalize("NFD").charAt(0);o+=c||" "}return o}
+function cap(s){return s.replace(/(^|[.!?]\s+)([a-zà-ÿ])/g,function(m,a,b){return a+b.toUpperCase()})}
+function fmt(n){return String(Math.round(n*100)/100)}
+function mode(){var r=document.querySelector('input[name="vmode"]:checked');return r?r.value:"consulta"}
+function curLang(){return $("vLang").value||"es-EC"}
+function vmsg(t,warn){var m=$("vMsg");m.textContent=t||"";m.className="note"+(warn?" vw":"")}
+function fieldLabel(id){var el=$(id),p=el&&el.parentNode,l=p&&p.querySelector("label"),t=l?l.textContent:id;
+  t=t.replace(/\s*\(.*\)\s*$/,"");return /^s\d$/.test(id)?"Examen · "+t:t}
+function targets(){return [].filter.call(document.querySelectorAll("main input[id],main select[id],main textarea[id]"),
+  function(el){return ids.indexOf(el.id)>=0&&el.id!=="dic"}).map(function(el){return el.id})}
+
+/* ---------------- números hablados → dígitos ---------------- */
+var NW={cero:0,uno:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,trece:13,catorce:14,quince:15,
+  dieciseis:16,diecisiete:17,dieciocho:18,diecinueve:19,veinte:20,veintiuno:21,veintiun:21,veintidos:22,veintitres:23,veinticuatro:24,
+  veinticinco:25,veintiseis:26,veintisiete:27,veintiocho:28,veintinueve:29,treinta:30,cuarenta:40,cincuenta:50,sesenta:60,setenta:70,
+  ochenta:80,noventa:90,cien:100,ciento:100,doscientos:200,doscientas:200,trescientos:300,trescientas:300,cuatrocientos:400,
+  quinientos:500,seiscientos:600,setecientos:700,ochocientos:800,novecientos:900,mil:1000};
+/* Una palabra 0-9 suelta solo se convierte si va junto a una unidad o decimal
+   (evita "uno de los ojos" → "1 de los ojos"). all=true convierte todo. */
+var UNIT_AFTER=/^(?:anos?|mes(?:es)?|semanas?|dias?|horas?|veces|kg|kilos?|kilogramos?|segundos?|grados?|lpm|rpm|por|punto|coma|con|%)$/;
+function fits(c,ty,v){if(c.y)return ty==="u"&&v>=1&&v<=9;
+  if(ty==="m")return c.last!=="m";
+  if(c.last==="h")return ty==="t"||ty==="u";
+  if(c.last==="m")return true;
+  return false}
+function wordsToDigits(text,all){
+  var tk=String(text).split(/(\s+)/),seqs=[],cur=null,i,m,w,v,ty;
+  function close(){if(cur){seqs.push(cur);cur=null}}
+  for(i=0;i<tk.length;i+=2){          // índices pares = palabras, impares = espacios
+    m=tk[i].match(/^([A-Za-zÀ-ÿ]+)([^A-Za-zÀ-ÿ0-9]*)$/);w=m?fold(m[1]):"";
+    if(m&&w==="y"&&cur&&cur.last==="t"&&!cur.p&&!m[2]){cur.y=true;continue}
+    v=m&&NW.hasOwnProperty(w)?NW[w]:null;
+    if(v===null){close();continue}
+    ty=v===1000?"m":v>=100?"h":(v>=30&&v%10===0)?"t":"u";
+    if(cur&&!cur.p&&fits(cur,ty,v)){
+      if(ty==="m"){cur.tot+=(cur.sub||1)*1000;cur.sub=0}else cur.sub+=v;
+      cur.e=i;cur.n++;cur.last=ty;cur.y=false;
+    }else{close();cur={s:i,e:i,n:1,tot:ty==="m"?1000:0,sub:ty==="m"?0:v,last:ty,y:false,p:false}}
+    if(m[2])cur.p=true;               // puntuación pegada cierra el número
+  }
+  close();
+  for(var k=seqs.length-1;k>=0;k--){var q=seqs[k],val=q.tot+q.sub;
+    if(!all&&q.n===1&&val<10){var nx=tk[q.e+2]?fold(tk[q.e+2]).replace(/[^a-z%]/g,""):"",pv=q.s>=2?tk[q.s-2]:"";
+      if(!UNIT_AFTER.test(nx)&&!/\d$/.test(pv)&&!/^(punto|coma|con)$/.test(fold(pv)))continue}
+    var tail=(tk[q.e].match(/[^A-Za-zÀ-ÿ0-9]*$/)||[""])[0];
+    tk[q.s]=String(val)+tail;for(var j=q.s+1;j<=q.e;j++)tk[j]=""}
+  return tk.join("").replace(/ {2,}/g," ")}
+
+/* ---------------- limpieza del texto reconocido ---------------- */
+function redact(t){
+  return t.replace(/[^\s@]+@[^\s@]+\.[a-z]{2,}/gi,"[dato omitido]")
+    .replace(/\S+\s+arroba\s+\S+/gi,"[dato omitido]")
+    .replace(/\+?\d[\d \-]{7,}\d/g,function(m){var d=m.replace(/\D/g,""),g=m.split(/[ \-]+/);
+      if(d.length<9)return m;   // valores clínicos cortos se respetan
+      return g.some(function(x){return x.length>=7})||/^(\+|0)/.test(m)?"[dato omitido]":m})}
+function cleanText(raw){
+  var t=" "+String(raw||"")+" ";
+  t=t.replace(/\b(?:punto y aparte|nueva l[ií]nea|siguiente l[ií]nea|nuevo p[aá]rrafo)\b/gi,"\n")
+     .replace(/\bpunto y seguido\b/gi,".").replace(/\bpunto y coma\b/gi,";")
+     .replace(/(^|\s)(?:e+h+|e+m+|m{2,}|a+h+)(?=[\s,.]|$)/gi,"$1");   // muletillas
+  t=wordsToDigits(t,false);
+  t=t.replace(/(\d+)\s+(?:punto|coma)\s+(\d+)/gi,"$1.$2")
+     .replace(/(\d)\s*por ciento\b/gi,"$1%")
+     .replace(/(\d)\s+(?:kilogramos?|kilos?)\b/gi,"$1 kg")
+     .replace(/(\d)\s+grados(?:\s+(?:cent[ií]grados|celsius))?/gi,"$1 °C")
+     .replace(/(\d)\s+latidos por minuto\b/gi,"$1 lpm")
+     .replace(/(\d)\s+respiraciones por minuto\b/gi,"$1 rpm");
+  t=redact(t);
+  t=t.replace(/[ \t]+/g," ").replace(/ *\n */g,"\n").replace(/ +([.,;:%])/g,"$1").replace(/\.{2,}/g,".").replace(/\n{3,}/g,"\n\n").trim();
+  return t.replace(/(^|[.!?]\s+|\n)([a-zà-ÿ])/g,function(m,a,b){return a+b.toUpperCase()})}
+
+/* ---------------- heurísticas de distribución ---------------- */
+/* [campo, tipo, alias (sin tildes), banderas]
+   tipo: t=texto, n=número, s=desplegable, r=reseña
+   k = conservar la palabra clave en el valor ("Hemograma HCT 22%")
+   l = admite ir en serie (constantes dictadas seguidas, tras un número) */
+var MK=[
+ ["resena","r","resena|datos del paciente|identificacion del paciente"],
+ ["esp","s","especie"],["raza","t","raza"],["edad","t","edad"],["sexo","s","sexo"],
+ ["rep","s","estado reproductivo|reproductivo"],["peso","n","peso corporal|peso","l"],
+ ["reg","s","region de ecuador|region"],
+ ["vect","t","exposicion a garrapatas|exposicion a vectores|vectores|estado sanitario"],["vect","t","garrapatas","k"],
+ ["motivo","t","motivo de la consulta|motivo de consulta|motivo"],
+ ["anam","t","anamnesis|historia clinica|historia actual"],
+ ["anam","t","el propietario refiere|propietario refiere|tutor refiere|tutora refiere|refiere|historia","k"],
+ ["vac","t","vacunacion y desparasitacion|vacunacion|vacunas|plan sanitario"],
+ ["vac","t","desparasitacion|desparasitado|desparasitada|vacunado|vacunada","k"],
+ ["trat","t","tratamientos previos|tratamiento previo|medicacion actual|medicacion|medicamentos"],
+ ["probl","t","listado de problemas|lista de problemas"],
+ ["fc","n","frecuencia cardiaca|f c|fc|efe ce|pulsaciones","l"],
+ ["fr","n","frecuencia respiratoria|f r|fr|efe erre|respiraciones","l"],
+ ["temp","n","temperatura rectal|temperatura","l"],
+ ["tllc","t","tiempo de llenado capilar|tiempo de relleno capilar|llenado capilar|relleno capilar|tllc|tlc","l"],
+ ["muc","t","mucosas|mucosa","l"],["pulso","t","pulso femoral|pulso","l"],
+ ["hid","t","estado de hidratacion|hidratacion","l"],["hid","t","deshidratacion|deshidratado|deshidratada","kl"],
+ ["cc","n","condicion corporal","l"],["dolor","t","escala de dolor|dolor","kl"],
+ ["s0","t","estado general|actitud|estado mental|sensorio"],
+ ["s1","t","piel y anexos|piel|pelaje|manto|tegumentario"],
+ ["s2","t","ojos y oidos|oftalmologico|otoscopia"],["s2","t","ojos|ojo|oidos|oido|conjuntivas","k"],
+ ["s3","t","ganglios linfaticos|ganglios|linfonodulos|linfonodos|nodulos linfaticos"],
+ ["s4","t","sistema cardiovascular|cardiovascular|auscultacion cardiaca|corazon"],
+ ["s5","t","sistema respiratorio|aparato respiratorio|respiratorio|auscultacion pulmonar|campos pulmonares|pulmones"],
+ ["s6","t","sistema digestivo|aparato digestivo|digestivo|palpacion abdominal|abdomen"],
+ ["s7","t","sistema urogenital|urogenital|genitourinario|aparato reproductor|urinario"],
+ ["s8","t","sistema musculoesqueletico|musculoesqueletico|musculo esqueletico|aparato locomotor|locomotor"],
+ ["s9","t","examen neurologico|neurologico|sistema nervioso"],
+ ["eco","t","hallazgos ecograficos|ecografia abdominal|ecografia|ecografico|ultrasonido|eco"],
+ ["lab","t","pruebas complementarias|examenes de laboratorio|laboratorio|analitica"],
+ ["lab","t","hemograma|bioquimica|quimica sanguinea|snap test|test rapido|uroanalisis|urianalisis|coprologico|frotis","k"]];
+var PRE="(?:(?:en|el|la|los|las|al|a la|examen de|examen del|examen de la|examen de los) )?";
+var MKR=MK.map(function(m){var a=m[2].split("|").sort(function(x,y){return y.length-x.length}),f=m[3]||"";
+  return {id:m[0],kind:m[1],keep:f.indexOf("k")>=0,list:f.indexOf("l")>=0,
+    re:new RegExp("(^|[^a-z0-9])("+PRE+"("+a.join("|")+"))(?![a-z0-9])","g")}});
+/* Opciones de los desplegables (se elige la mención más temprana) */
+var SEL={
+ esp:[["Felino",/\b(?:felin[oa]s?|gat[oa]s?|gatit[oa]s?|minin[oa])\b/],["Canino",/\b(?:canin[oa]s?|perr[oa]s?|cachorr[oa]s?)\b/],
+      ["Otra",/\b(?:otra especie|exotic[oa]|conejo|ave|loro|hamster|huron|cobayo|cuy|tortuga|reptil)\b/]],
+ sexo:[["Hembra",/\b(?:hembra|perra|gata)\b/],["Macho",/\bmacho\b/]],
+ rep:[["Entero",/\b(?:no (?:esta )?(?:esterilizad|castrad)[oa]|enter[oa])\b/],
+      ["Esterilizado",/\b(?:esterilizad[oa]|castrad[oa]|ovariohisterectomizad[oa]|orquiectomizad[oa]|ovh)\b/]],
+ reg:[["Galápagos",/\bgalapagos\b/],["Amazonía / Oriente",/\b(?:amazonia|amazonica|oriente)\b/],["Costa",/\b(?:costa|litoral)\b/],["Sierra",/\b(?:sierra|andes|andina)\b/]]};
+function matchSel(id,t){var L=SEL[id],f=fold(t),best=null,bi=1e9,el=$(id);
+  (L||[]).forEach(function(o){var m=f.match(o[1]);if(m&&m.index<bi){bi=m.index;best=o[0]}});
+  if(!best&&el&&el.options)[].forEach.call(el.options,function(op){if(fold(op.text)===f.trim())best=op.text});
+  return best}
+/* Primer número del texto (+ decimales hablados); devuelve resto si tiene contenido */
+function pickNum(id,t){
+  var s=wordsToDigits(" "+t+" ",true).replace(/(\d+)\s+(?:con|punto|coma)\s+(\d+)/i,"$1.$2");
+  if(id==="temp")s=s.replace(/^(\D*?\b\d{2})\s+(\d)(?![\d.,])/,"$1.$2");    // "39 5" → 39.5
+  var m=s.match(/\d+(?:[.,]\d+)?/);if(!m)return null;
+  var raw=m[0],n=parseFloat(raw.replace(",","."));
+  if(id==="temp"&&/^\d{3}$/.test(raw)&&n>=300&&n<=450)n=n/10;               // "395" → 39.5
+  var rest=s.slice(m.index+raw.length),r=fold(rest).replace(/\(\?\)/g," ")
+    .replace(/\b(?:kg|kilos?|kilogramos?|lpm|rpm|latidos|respiraciones|por|minuto|grados?|centigrados|celsius|de|sobre|nueve|cinco|segundos?|y|es|en|c)\b/g," ")
+    .replace(/[^a-z]+/g," ").trim();
+  return {n:n,rest:r.length>=3?tidy(rest):""}}
+function tidy(v){v=String(v).replace(/^[\s:;,.\-–]+/,"").replace(/[\s:;,\-–]+$/,"")
+  .replace(/([^.!?;:,\s])\s*\n+\s*/g,"$1. ").replace(/\s*\n+\s*/g," ").trim();
+  return v?cap(v.charAt(0).toUpperCase()+v.slice(1)):""}
+function row(id,tx){return {id:id,tx:tx}}
+function un(tx,note){return {id:"anam",tx:tx,un:true,note:note}}
+function parseResena(t,rows){var f=fold(t),n=0,m;
+  ["esp","sexo","rep"].forEach(function(id){var o=matchSel(id,t);if(o){rows.push(row(id,o));n++}});
+  if((m=f.match(/(\d+(?:[.,]\d+)?|un|una|medio)\s+(anos?|mes(?:es)?|semanas?|dias?)\b/))){rows.push(row("edad",t.substr(m.index,m[0].length)));n++}
+  if((m=f.match(/(\d+(?:[.,]\d+)?)\s*(?:kg|kilos?|kilogramos?)\b/))){rows.push(row("peso",m[1].replace(",",".")));n++}
+  if((m=f.match(/\braza\s+([a-z][a-z ]*?)(?=\s*(?:$|[,.;\n]|\b(?:de|con|macho|hembra|enter[oa]|esterilizad[oa]|castrad[oa]|edad|peso|sexo)\b|\d))/))){
+    rows.push(row("raza",tidy(t.substr(m.index+m[0].length-m[1].length,m[1].length))));n++}
+  return n}
+/* ¿Es un encabezado real o solo una palabra dentro de una frase?
+   Se acepta si: va tras una pausa/puntuación, va seguido de ":", o es una
+   constante dictada en serie (tras un número o tras otra constante cercana). */
+function accept(F,h,last){var B=F.slice(0,h.st),A=F.slice(h.en);
+  if(/(^|[\n.;:!?])\s*$/.test(B))return true;
+  if(/^\s*:/.test(A))return true;
+  if(h.mk.list){
+    if(/(\d|%|°c|kg|lpm|rpm|segundos?)\s*$/.test(B))return true;
+    if(last&&last.mk.list&&F.slice(last.en,h.st).trim().split(/\s+/).length<=6)return true}
+  return false}
+function propose(text){
+  var F=fold(text),c=[],rows=[],hits=[],last=null;
+  MKR.forEach(function(mk){var m;mk.re.lastIndex=0;
+    while((m=mk.re.exec(F))!==null){var st=m.index+m[1].length,en=st+m[2].length;c.push({st:st,en:en,ast:en-m[3].length,mk:mk})}});
+  c.sort(function(a,b){return a.st-b.st||(b.en-b.st)-(a.en-a.st)});
+  c.forEach(function(h){if(last&&h.st<last.en)return;if(accept(F,h,last)){hits.push(h);last=h}});
+  // Texto antes del primer encabezado: si parece reseña ("canino macho 3 años"), se estructura
+  var pre=tidy(text.slice(0,hits.length?hits[0].st:text.length)),tmp=[];
+  if(pre){if(pre.split(/\s+/).length<=20&&parseResena(pre,tmp)>=2)rows=rows.concat(tmp);
+    else rows.push(un(pre,"Sin encabezado reconocido: elige el campo destino y márcalo"))}
+  hits.forEach(function(h,i){var end=i+1<hits.length?hits[i+1].st:text.length,id=h.mk.id,
+      val=tidy(text.slice(h.keep||h.mk.keep?h.ast:h.en,end)),p,o;
+    switch(h.mk.kind){
+      case "t":if(val)rows.push(row(id,val));break;
+      case "n":p=pickNum(id,val);
+        if(!p){if(val)rows.push(un(val,"Se dijo «"+fieldLabel(id)+"» pero no reconocí un número"));break}
+        var r=row(id,fmt(p.n));r.lc=/\(\?\)/.test(val);rows.push(r);
+        if(p.rest)rows.push(un(p.rest,"Texto dictado después de "+fieldLabel(id)));break;
+      case "s":o=matchSel(id,val);if(o)rows.push(row(id,o));else if(val)rows.push(un(val,"No reconocí la opción de "+fieldLabel(id)));break;
+      case "r":if(!parseResena(val,rows)&&val)rows.push(un(val,"Reseña sin datos reconocibles"));break}});
+  return rows.map(annotate)}
+/* Decide qué filas se aplican por defecto y avisa de conflictos */
+function annotate(r){var el=$(r.id),cur=el?el.value.trim():"";
+  if(r.un){r.on=false;return r}
+  if(NUMF[r.id]){var n=parseFloat(r.tx),g=NUMF[r.id];
+    if(r.lc){r.on=false;r.w=1;r.note="Reconocimiento dudoso: verifica el número"}
+    else if(n<g[0]||n>g[1]){r.on=false;r.w=1;r.note="Fuera de rango plausible ("+g[0]+"–"+g[1]+"): verifica"}
+    else if(cur&&num(r.id)!==n){r.on=false;r.w=1;r.note="Reemplazaría el valor actual ("+cur+")"}
+    else if(cur){r.on=false;r.note="Ya registrado"}else r.on=true}
+  else if(el.tagName==="SELECT"){r.on=el.value!==r.tx;r.note=r.on?"Actual: "+el.value:"Ya seleccionado"}
+  else{r.on=true;r.note=cur?"Se añadirá al texto existente":"";if(/\(\?\)/.test(r.tx)){r.w=1;r.note=(r.note?r.note+". ":"")+"Contiene fragmentos dudosos (?)"}}
+  return r}
+
+/* ---------------- escritura en el formulario con deshacer ---------------- */
+function setVal(el,v,grp){if(!grp.some(function(g){return g.id===el.id}))grp.push({id:el.id,prev:el.value});el.value=v;
+  el.classList.remove("vflash");void el.offsetWidth;el.classList.add("vflash")}
+function commit(grp){if(!grp.length)return;S.undo.push(grp);if(S.undo.length>40)S.undo.shift();save();refresh();updUndo()}
+function updUndo(){$("vUndo").disabled=!S.undo.length}
+function undo(){var g=S.undo.pop();if(!g)return;for(var i=g.length-1;i>=0;i--){var el=$(g[i].id);if(el)el.value=g[i].prev}
+  save();refresh();updUndo();vmsg("Cambio deshecho.")}
+/* Valor completo: desplegable / número (reemplaza) / texto (se añade) */
+function putValue(el,tx,grp){var id=el.id;
+  if(el.tagName==="SELECT"){var o=matchSel(id,tx);if(!o)return false;setVal(el,o,grp);return true}
+  if(NUMF[id]){var p=pickNum(id,tx);if(!p)return false;setVal(el,fmt(p.n),grp);return true}
+  var ta=el.tagName==="TEXTAREA",t=ta?tx:tx.replace(/\s*\n+\s*/g,"; "),cur=el.value.replace(/\s+$/,"");
+  setVal(el,cur?cur+(ta?"\n":"; ")+t:t,grp);return true}
+/* Modo campo: inserta en la posición del cursor del campo tocado */
+function insertField(el,t){var grp=[],id=el.id;
+  if(el.tagName==="SELECT"||NUMF[id]){
+    if(!putValue(el,t,grp))return vmsg("No reconocí "+(NUMF[id]?"un número":"una opción válida")+" para «"+fieldLabel(id)+"»: «"+t+"».",1);
+    if(NUMF[id]){var n=parseFloat(el.value),g=NUMF[id];if(n<g[0]||n>g[1]||/\(\?\)/.test(t))vmsg("Revisa "+fieldLabel(id)+": "+el.value+" (fuera de rango o dudoso).",1)}
+  }else{
+    if(el.tagName!=="TEXTAREA")t=t.replace(/\s*\n+\s*/g,"; ");
+    var val=el.value,a=val.length,b=a;
+    if(typeof el.selectionStart==="number"){a=el.selectionStart;b=el.selectionEnd}
+    var before=val.slice(0,a),after=val.slice(b),bt=before.replace(/[ \t]+$/,"");
+    // continúa la frase en minúscula salvo siglas (ALT, HCT…)
+    if(bt&&!/[.!?\n]$/.test(bt)&&!/^[A-ZÁÉÍÓÚÑ]{2}/.test(t))t=t.charAt(0).toLowerCase()+t.slice(1);
+    var pre=before&&!/[\s(]$/.test(before)&&!/^[\n.,;:]/.test(t)?" ":"",post=after&&!/^[\s.,;:)]/.test(after)?" ":"";
+    setVal(el,before+pre+t+post+after,grp);var c=(before+pre+t).length;try{el.setSelectionRange(c,c)}catch(e){}
+  }
+  commit(grp)}
+function toTranscript(t){var d=$("dic"),v=d.value.replace(/\s+$/,"");d.value=v?v+(/^[.,;]/.test(t)?"":"\n")+t:t;d.scrollTop=d.scrollHeight;save()}
+
+/* ---------------- propuesta de distribución (UI) ---------------- */
+function distribute(){var t=$("dic").value.trim();if(!t){vmsg("No hay transcripción para distribuir.",1);return}
+  S.rows=propose(t);if(!S.rows.length){vmsg("No encontré contenido para distribuir.",1);return}
+  var opts=targets().map(function(id){return '<option value="'+id+'">'+esc(fieldLabel(id))+"</option>"}).join("");
+  $("vRows").innerHTML=S.rows.map(function(r,i){return '<div class="vrow" data-i="'+i+'"><input type="checkbox" class="vck" aria-label="Aplicar esta fila"'+(r.on?" checked":"")+
+    '><select class="vtg" aria-label="Campo destino">'+opts+'</select><textarea class="vtx" rows="1" aria-label="Texto a insertar">'+esc(r.tx)+"</textarea>"+
+    (r.note?'<div class="vnote'+(r.w||r.un?" w":"")+'">'+esc(r.note)+"</div>":"")+"</div>"}).join("");
+  [].forEach.call($("vRows").querySelectorAll(".vrow"),function(d){d.querySelector(".vtg").value=S.rows[+d.getAttribute("data-i")].id});
+  $("vProp").hidden=false;vmsg(S.rows.length+" fragmento(s) detectados. Revisa y aplica.");
+  try{$("vProp").scrollIntoView({behavior:"smooth",block:"nearest"})}catch(e){}}
+function applyRows(){var grp=[],n=0,bad=[];
+  [].forEach.call($("vRows").querySelectorAll(".vrow"),function(d){if(!d.querySelector(".vck").checked)return;
+    var id=d.querySelector(".vtg").value,tx=d.querySelector(".vtx").value.trim(),el=$(id);if(!tx||!el)return;
+    if(putValue(el,tx,grp))n++;else bad.push(fieldLabel(id))});
+  commit(grp);hideProp();
+  vmsg(n+" valor(es) aplicados."+(bad.length?" No se pudo aplicar: "+bad.join(", ")+".":"")+(n?" Puedes deshacer.":""),bad.length)}
+function hideProp(){$("vProp").hidden=true;$("vRows").innerHTML="";S.rows=[]}
+
+/* ---------------- motor de reconocimiento ---------------- */
+var ERR={"not-allowed":"Permiso de micrófono denegado. Actívalo en el candado de la barra de direcciones o en los ajustes del navegador. Si abriste la app desde un enlace de claude.ai, el micrófono está bloqueado allí: usa el archivo HTML descargado en Chrome.",
+ "service-not-allowed":"El navegador bloqueó el servicio de voz. Revisa los permisos del sitio.",
+ "audio-capture":"No se detecta micrófono o lo está usando otra app.",
+ "network":"Sin conexión con el servicio de voz del navegador. Revisa internet o instala la voz local.",
+ "language-not-supported":"Idioma no disponible para el reconocimiento. Prueba otra variante de español."};
+function begin(){
+  var r=new SR();S.rec=r;              // instancia nueva en cada reinicio: evita estados corruptos en Android
+  r.lang=curLang();r.interimResults=true;r.continuous=!MOBILE;r.maxAlternatives=1;
+  if(S.local==="available"){try{r.processLocally=true}catch(e){}try{r.mode="ondevice-only"}catch(e){}}
+  r.onstart=function(){if(S.rec===r&&S.want)ui("listening")};
+  r.onresult=function(e){if(S.rec!==r)return;var it="";S.lastRes=Date.now();
+    for(var i=e.resultIndex;i<e.results.length;i++){var res=e.results[i],alt=res[0];if(!alt)continue;
+      if(res.isFinal)onFinal(alt.transcript,alt.confidence);else it+=alt.transcript}
+    showInterim(it)};
+  r.onerror=function(e){if(S.rec===r)onError(e.error||"")};
+  r.onend=function(){if(S.rec!==r)return;S.rec=null;onEnd()};
+  try{r.start()}catch(e){S.rec=null;setTimeout(onEnd,300)}}
+function onFinal(raw,conf){
+  var key=fold(String(raw)).trim();if(!key)return;
+  if(key===S.lastFinal&&Date.now()-S.lastFinalTs<2500)return;   // duplicado típico de Android
+  S.lastFinal=key;S.lastFinalTs=Date.now();
+  var stop=/(?:^|\s)(?:detener|terminar|parar|finalizar) (?:el )?dictado\.?$/.test(key);
+  if(stop)raw=String(raw).replace(/\s*(?:detener|terminar|parar|finalizar)\s+(?:el\s+)?dictado\.?\s*$/i,"");
+  var t=cleanText(raw);
+  if(t){if(conf>0&&conf<0.5)t+=" (?)";
+    if(/\b(?:c[eé]dula|tel[eé]fono|celular|correo|direcci[oó]n|domicilio)\b/i.test(t))vmsg("Atención: parece que se dictó un dato personal del propietario. Revísalo y bórralo.",1);
+    if(mode()==="campo"){if(S.field&&document.body.contains(S.field))insertField(S.field,t);
+      else{toTranscript(t);vmsg("No hay campo seleccionado: el texto se guardó en la transcripción.",1)}}
+    else toTranscript(t)}
+  if(stop)stopDict()}
+function onError(code){
+  if(code==="no-speech"||code==="aborted")return;          // silencio: se reinicia solo
+  if(code==="language-not-supported"&&S.local==="available"){S.want=false;S.fatal="La voz local de este idioma no está lista. Elige otra variante o reinstálala.";return}
+  if(ERR[code]){S.want=false;S.fatal=ERR[code]}}
+function onEnd(){
+  if(!S.want)return finish();
+  var now=Date.now();S.ends.push(now);S.ends=S.ends.filter(function(t){return now-t<15000});
+  if(S.ends.length>8&&now-S.lastRes>15000){S.want=false;S.fatal="El micrófono se corta repetidamente sin captar voz. Revisa permisos, micrófono o ruido.";return finish()}
+  setTimeout(function(){if(S.want&&!S.rec)begin()},MOBILE?200:60)}
+function startDict(){
+  if(!SR)return vmsg("Este navegador no permite dictado por voz.",1);
+  if(S.want)return;
+  if(S.local!=="available"&&!$("vConsent").checked){
+    vmsg("Para dictar en este navegador acepta el procesamiento de voz en línea (casilla de arriba) o instala la voz local.",1);
+    try{$("vConsentRow").scrollIntoView({block:"center",behavior:"smooth"})}catch(e){}return}
+  if(S.local!=="available"&&navigator.onLine===false)return vmsg("Sin conexión: el dictado en línea no funcionará. Instala la voz local o usa el micrófono del teclado.",1);
+  if(mode()==="campo"&&!S.field)return vmsg("Modo «Campo tocado»: toca primero el campo donde quieres escribir.",1);
+  S.want=true;S.fatal="";S.t0=Date.now();S.ends=[];S.lastRes=Date.now();vmsg("");
+  ui("starting");begin();wakeOn();meterOn();clearInterval(S.tick);S.tick=setInterval(tick,500);tick()}
+function stopDict(){if(!S.want&&!S.rec)return;S.want=false;
+  var r=S.rec;if(!r)return finish();
+  ui("stopping");try{r.stop()}catch(e){}   // stop() entrega el último resultado final
+  clearTimeout(S.stopT);S.stopT=setTimeout(function(){if(S.rec===r){try{r.abort()}catch(e){}S.rec=null;finish()}},2500)}
+function finish(){clearTimeout(S.stopT);clearInterval(S.tick);wakeOff();meterOff();showInterim("");$("vTime").textContent="";
+  ui(S.fatal?"error":"idle",S.fatal);
+  if(!S.fatal&&mode()==="consulta"&&$("dic").value.trim())vmsg("Dictado detenido. Revisa la transcripción y pulsa «Distribuir en el formulario».")}
+function toggle(){if(S.want)stopDict();else startDict()}
+function tick(){if(!S.want)return;var s=Math.floor((Date.now()-S.t0)/1000);
+  $("vTime").textContent=Math.floor(s/60)+":"+("0"+s%60).slice(-2);
+  if(Date.now()-S.t0>MAX_MS){stopDict();vmsg("Dictado detenido tras 30 minutos (límite de seguridad). Puedes reanudarlo.")}}
+
+/* Pantalla encendida mientras se dicta (si el navegador lo permite) */
+function wakeOn(){try{if(navigator.wakeLock)navigator.wakeLock.request("screen").then(function(w){if(S.want)S.wake=w;else w.release()},function(){})}catch(e){}}
+function wakeOff(){try{if(S.wake)S.wake.release()}catch(e){}S.wake=null}
+/* Medidor de nivel + aviso de ruido de fondo (solo PC: en móvil compite por el micrófono).
+   El audio se analiza en memoria y se descarta; nunca se guarda. */
+function meterOn(){var AC=window.AudioContext||window.webkitAudioContext;
+  if(MOBILE||!AC||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
+  navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}).then(function(st){
+    if(!S.want){st.getTracks().forEach(function(t){t.stop()});return}
+    var ac=new AC(),an=ac.createAnalyser(),buf,hist=[],raf=0;an.fftSize=1024;ac.createMediaStreamSource(st).connect(an);buf=new Float32Array(an.fftSize);
+    (function loop(){if(!an.getFloatTimeDomainData)return;an.getFloatTimeDomainData(buf);var s=0;for(var i=0;i<buf.length;i++)s+=buf[i]*buf[i];
+      var rms=Math.sqrt(s/buf.length),now=Date.now(),mn=1;$("vLvl").style.width=Math.min(100,rms*600)+"%";
+      hist.push([now,rms]);while(hist.length&&now-hist[0][0]>3000)hist.shift();
+      hist.forEach(function(h){if(h[1]<mn)mn=h[1]});   // nivel mínimo en 3 s = ruido de fondo constante
+      $("vNoise").textContent=hist.length>60&&mn>0.02?"· Ambiente ruidoso: acércate al micrófono":"";
+      raf=requestAnimationFrame(loop)})();
+    S.meter=function(){cancelAnimationFrame(raf);st.getTracks().forEach(function(t){t.stop()});try{ac.close()}catch(e){}}
+  },function(){})}
+function meterOff(){if(S.meter)S.meter();S.meter=null;$("vLvl").style.width="0";$("vNoise").textContent=""}
+
+/* ---------------- privacidad: detección de reconocimiento local ---------------- */
+function detect(){S.local="no";paint();if(!SR)return;var lang=curLang(),p=null;
+  try{if(typeof SR.available==="function")p=SR.available({langs:[lang],processLocally:true});
+    else if(typeof SR.availableOnDevice==="function")p=SR.availableOnDevice(lang)}catch(e){p=null}
+  if(p&&typeof p.then==="function")p.then(function(st){if(curLang()!==lang)return;
+    S.local=st==="available"?"available":(st==="downloadable"||st==="downloading")?st:"no";paint()},function(){})}
+function install(){var lang=curLang(),p=null;
+  try{if(typeof SR.install==="function")p=SR.install({langs:[lang],processLocally:true});
+    else if(typeof SR.installOnDevice==="function")p=SR.installOnDevice(lang)}catch(e){}
+  if(!p||typeof p.then!=="function")return vmsg("Este navegador no permitió instalar la voz local.",1);
+  S.local="downloading";paint();vmsg("Descargando la voz local (puede tardar unos minutos; mantén la app abierta)…");
+  p.then(function(ok){detect();vmsg(ok?"Voz local instalada: el audio ya no sale del equipo.":"No se pudo instalar la voz local.",!ok)},
+    function(){detect();vmsg("No se pudo instalar la voz local.",1)})}
+function paint(){var p=$("vPriv"),L=S.local;
+  if(!SR){p.innerHTML='<b class="vw">Este navegador no permite dictado por voz</b> (p. ej. Firefox). Usa Chrome o Edge en PC, o Chrome en Android. Alternativa privada en Android: el micrófono del teclado Gboard con reconocimiento sin conexión, en cualquier campo.';
+    $("vFab").hidden=true;$("vBtn").disabled=true;$("vConsentRow").hidden=true;$("vInstRow").hidden=true;return}
+  $("vFab").hidden=false;$("vBtn").disabled=false;
+  if(L==="available")p.innerHTML='<b class="vok">Privado: reconocimiento en el dispositivo.</b> El audio no sale de este equipo y funciona sin internet. No se graba ni se guarda audio.';
+  else p.innerHTML='<b class="vw">Reconocimiento en línea del navegador.</b> Para transcribir, este navegador envía el audio a su servicio de voz (Google en Chrome, Microsoft en Edge, Apple en Safari) y requiere internet. Esta app no graba ni guarda audio; no dictes datos del propietario.'+
+    (L==="downloadable"?" Puedes <b>instalar la voz local</b> para que todo quede en el equipo y funcione sin conexión.":L==="downloading"?" Descargando la voz local…":"");
+  $("vInstRow").hidden=L!=="downloadable";$("vConsentRow").hidden=L==="available"}
+
+/* ---------------- estado visual ---------------- */
+function ui(st,txt){var on=st==="listening",w=st==="starting"||st==="stopping";
+  [$("vBtn"),$("vFab")].forEach(function(b){b.classList.toggle("on",on);b.classList.toggle("wait",w);b.setAttribute("aria-pressed",on||st==="starting"?"true":"false")});
+  var lbl=on||st==="starting"?"Detener dictado":"Iniciar dictado";$("vBtnTx").textContent=lbl;$("vFab").setAttribute("aria-label",lbl);
+  $("vState").textContent=txt||{idle:"Listo para dictar",starting:"Activando micrófono…",listening:"Escuchando…",stopping:"Finalizando…",error:"Detenido"}[st];
+  $("vState").className=st==="error"?"vw":"";$("vLang").disabled=S.want;markTarget();updChip("")}
+function showInterim(t){$("vInterim").textContent=t?"… "+t:"";updChip(t)}
+function updChip(it){var c=$("vChip");if(!S.want){c.hidden=true;return}c.hidden=false;c.textContent="";
+  var b=document.createElement("b");b.textContent=mode()==="campo"?(S.field?"→ "+fieldLabel(S.field.id):"→ toca un campo"):"→ Transcripción de la consulta";c.appendChild(b);
+  if(it){var d=document.createElement("div");d.textContent=it;c.appendChild(d)}}
+function markTarget(){[].forEach.call(document.querySelectorAll(".vtarget"),function(e){e.classList.remove("vtarget")});
+  if(S.want&&mode()==="campo"&&S.field)S.field.classList.add("vtarget")}
+
+/* ---------------- eventos ---------------- */
+document.addEventListener("focusin",function(e){var el=e.target;
+  if(el&&el.id&&el.id!=="dic"&&ids.indexOf(el.id)>=0){S.field=el;markTarget();updChip("")}});
+$("vBtn").onclick=toggle;$("vFab").onclick=toggle;
+$("vFab").addEventListener("mousedown",function(e){e.preventDefault()});   // conserva el foco/cursor del campo
+$("vDist").onclick=distribute;$("vApply").onclick=applyRows;$("vCancel").onclick=function(){hideProp();vmsg("")};
+$("vUndo").onclick=undo;$("vInst").onclick=install;
+$("vClr").onclick=function(){var d=$("dic");if(!d.value)return;var g=[];setVal(d,"",g);commit(g);hideProp();vmsg("Transcripción borrada. Puedes deshacer.")};
+$("vRows").addEventListener("change",function(e){if(e.target.classList.contains("vtg")){var c=e.target.parentNode.querySelector(".vck");if(c)c.checked=true}});
+$("vConsent").onchange=function(){lsSet(LS.consent,this.checked?"1":"")};
+$("vLang").onchange=function(){lsSet(LS.lang,this.value);detect()};
+[].forEach.call(document.querySelectorAll('input[name="vmode"]'),function(r){r.onchange=function(){lsSet(LS.mode,mode());markTarget();updChip("")}});
+document.addEventListener("keydown",function(e){if(e.altKey&&!e.ctrlKey&&!e.metaKey&&(e.key==="m"||e.key==="M")){e.preventDefault();toggle()}});
+/* Privacidad y estabilidad: nunca seguir escuchando con la app en segundo plano */
+document.addEventListener("visibilitychange",function(){if(document.hidden&&S.want){stopDict();vmsg("Dictado detenido al salir de la pantalla (privacidad).")}});
+window.addEventListener("pagehide",function(){if(S.want)stopDict()});
+
+/* ---------------- inicio ---------------- */
+(function init(){var l=lsGet(LS.lang),m=lsGet(LS.mode),r;
+  if(l&&[].some.call($("vLang").options,function(o){return o.value===l}))$("vLang").value=l;
+  if(m&&(r=document.querySelector('input[name="vmode"][value="'+m+'"]')))r.checked=true;
+  $("vConsent").checked=lsGet(LS.consent)==="1";detect();ui("idle")})();
+
+window.VOZ={reset:function(){stopDict();hideProp();S.undo=[];updUndo();vmsg("")},clean:cleanText,propose:propose,w2d:wordsToDigits};
+})();
+</script>
+</body>
+</html>
